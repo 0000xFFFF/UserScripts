@@ -11,8 +11,8 @@
 // ==/UserScript==
 
 let words = GM_getValue("words", []);
-let stringWords = document.body.textContent || document.body.innerText;
-let matches = stringWords.match(/\w+/gmi);
+let stringWords = document.body.innerHTML;
+let matches = stringWords.match(/\w+/gi);
 let total = matches.concat(words);
 let uniq = [...new Set(total)].sort() ;
 GM_setValue("words", uniq);
