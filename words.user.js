@@ -7,7 +7,7 @@
 // @match        *://*/*
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @icon data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAKCAYAAABv7tTEAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAVUlEQVQokZWRORLAIAwDEcP/v7ypnFFsjqBOoMMGAbRLdCeSpqJ8/jEBRSCp5WHk462aIrA0hSGnBvdAAewaZo3dyUkcGLvLd5z8OPmffLfVnsX0Bw/XVzT+81ppcQAAAABJRU5ErkJggg==
+// @icon         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAKCAYAAABv7tTEAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAVUlEQVQokZWRORLAIAwDEcP/v7ypnFFsjqBOoMMGAbRLdCeSpqJ8/jEBRSCp5WHk462aIrA0hSGnBvdAAewaZo3dyUkcGLvLd5z8OPmffLfVnsX0Bw/XVzT+81ppcQAAAABJRU5ErkJggg==
 // ==/UserScript==
 
 let words = GM_getValue("words", []);
