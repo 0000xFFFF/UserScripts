@@ -2,7 +2,7 @@
 // @name         Words
 // @namespace    UserScript
 // @version      0.1
-// @description  Collect words from page
+// @description  Collect words from web pages
 // @author       0xC0LD
 // @match *://*/*
 // @grant        GM_getValue
