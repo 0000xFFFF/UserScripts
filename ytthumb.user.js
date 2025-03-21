@@ -12,7 +12,13 @@
 // @icon         https://www.youtube.com/favicon.ico
 // ==/UserScript==
 
-(function() {
+function button_it() {
+
+    const prevButton = document.getElementById("btn_thumbnail_url")
+    if (prevButton != null) {
+        prevButton.remove();
+    }
+
     const buttonId = "btn_thumbnail_url";
     const checkInterval = 500; // Interval for checking element existence
 
@@ -35,6 +41,7 @@
                             }
 
                             const button = document.createElement("a");
+                            button.target = '_blank';
                             button.id = buttonId;
                             button.href = thumbnailUrl;
                             button.title = "Max Resolution Thumbnail";
@@ -77,5 +84,31 @@
             }
         }
     }, checkInterval);
-})();
+}
 
+button_it();
+
+
+
+(function() {
+    'use strict';
+
+    let lastUrl = location.href;
+
+    function onUrlChange() {
+        console.log("YouTube URL changed:", location.href);
+        lastUrl = location.href;
+
+        button_it();
+    }
+
+    // Hook into YouTube's navigation API
+    const observer = new MutationObserver(() => {
+        if (location.href !== lastUrl) {
+            onUrlChange();
+        }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+})();
