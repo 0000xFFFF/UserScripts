@@ -48,10 +48,9 @@ function button_it() {
                             button.style.cssText = `
                                 display: inline-flex;
                                 align-items: center;
-                                margin-top: 10px;
+                                margin-left: 10px;
                                 padding: 5px 10px;
                                 color: #ffffff;
-                                background-color: #cc0000;
                                 border-radius: 4px;
                                 text-decoration: none;
                                 font-weight: bold;
