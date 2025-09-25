@@ -3,7 +3,8 @@
 // @namespace    UserScript
 // @version      0.1
 // @description  Collect words from web pages
-// @author       0xC0LD
+// @author       0000xFFFF
+// @license      MIT
 // @match        *://*/*
 // @grant        GM_getValue
 // @grant        GM_setValue

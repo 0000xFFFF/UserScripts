@@ -4,6 +4,7 @@
 // @version      1.0
 // @description  Adds a button to the current thumbnail of the video
 // @author       0000xFFFF
+// @license      MIT
 // @include      http*://*.youtube.com/*
 // @include      http*://youtube.com/*
 // @include      http*://*.youtu.be/*
