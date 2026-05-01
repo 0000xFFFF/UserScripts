@@ -2,7 +2,7 @@
 // @name         1px Video Progress Bar
 // @namespace    UserScript
 // @version      1.2
-// @description  1px Video Progress Bar
+// @description  Always draw a one pixel video progress bar on the bottom of every video element on the page.
 // @author       0000xFFFF
 // @license      MIT
 // @match        *://*/*
