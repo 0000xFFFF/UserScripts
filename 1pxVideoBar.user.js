@@ -1,74 +1,82 @@
 // ==UserScript==
 // @name         1px Video Progress Bar
 // @namespace    UserScript
-// @version      1.3
+// @version      1.4
 // @description  Always draw a one pixel video progress bar on the bottom of every video element on the page.
 // @author       0000xFFFF
 // @license      MIT
 // @match        *://*/*
 // @grant        none
 // ==/UserScript==
+
 (function() {
     'use strict';
 
-    // WeakMap: survives node replacement, no leaks when nodes are GC'd
     const tracked = new WeakMap();
 
     function addProgressBar(video) {
-        if (tracked.has(video)) return;
+        if (tracked.has(video) || video.closest('.re-progress-ignored')) return;
 
         const bar = document.createElement('div');
+        bar.className = 're-progress-bar';
         Object.assign(bar.style, {
-            position:      'fixed',   // KEY FIX: detached from DOM hierarchy
-            top:           '0',
-            left:          '0',
+            position:      'fixed',
             height:        '1px',
-            width:         '0',
             background:    'red',
             pointerEvents: 'none',
             zIndex:        '2147483647',
+            transition:    'opacity 0.2s',
+            opacity:       '0'
         });
 
-        function update() {
-            if (!video.duration || isNaN(video.duration)) return;
-            // Sync to actual screen coords each frame — survives any DOM restructure
-            const r = video.getBoundingClientRect();
-            bar.style.left  = r.left + 'px';
-            bar.style.top   = (r.bottom - 1) + 'px';
-            bar.style.width = (video.currentTime / video.duration) * r.width + 'px';
-        }
+        let animationFrame;
 
-        function reset() { bar.style.width = '0'; }
+        function sync() {
+            const rect = video.getBoundingClientRect();
+
+            // Hide bar if video is off-screen or has no size
+            if (rect.height === 0 || rect.top > window.innerHeight || rect.bottom < 0) {
+                bar.style.opacity = '0';
+            } else {
+                bar.style.opacity = '1';
+                bar.style.left = rect.left + 'px';
+                bar.style.top = (rect.bottom - 1) + 'px';
+
+                const progress = video.currentTime / video.duration;
+                bar.style.width = (isNaN(progress) ? 0 : progress * rect.width) + 'px';
+            }
+
+            animationFrame = requestAnimationFrame(sync);
+        }
 
         function cleanup() {
-            video.removeEventListener('timeupdate', update);
-            video.removeEventListener('progress',   update);
-            video.removeEventListener('loadedmetadata', reset);
-            video.removeEventListener('emptied',    reset);
+            cancelAnimationFrame(animationFrame);
             bar.remove();
-            // don't delete from WeakMap — node is gone anyway
         }
 
-        video.addEventListener('timeupdate',    update);
-        video.addEventListener('progress',      update);
-        video.addEventListener('loadedmetadata', reset);
-        video.addEventListener('emptied',       reset);
-
-        // Clean up when 4chan X removes the video node
-        const ro = new IntersectionObserver(() => {
-            if (!document.contains(video)) { cleanup(); ro.disconnect(); }
+        // Use IntersectionObserver to handle cleanup when video is removed
+        const observer = new MutationObserver(() => {
+            if (!document.contains(video)) {
+                cleanup();
+                observer.disconnect();
+            }
         });
-        ro.observe(video);
+        observer.observe(document.body, { childList: true, subtree: true });
 
         document.body.appendChild(bar);
         tracked.set(video, bar);
+        sync(); // Start loop
     }
 
-    function scanVideos() {
-        document.querySelectorAll('video').forEach(addProgressBar);
-    }
+    // Twitter specific: Target videos inside the main timeline
+    const scan = () => {
+        const videos = document.querySelectorAll('video');
+        for (const v of videos) addProgressBar(v);
+    };
 
-    scanVideos();
-    const observer = new MutationObserver(scanVideos);
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+    // Run frequently to catch Twitter's aggressive DOM recycling
+    setInterval(scan, 2000);
+
+    const obs = new MutationObserver(scan);
+    obs.observe(document.body, { childList: true, subtree: true });
 })();
