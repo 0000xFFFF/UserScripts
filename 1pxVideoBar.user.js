@@ -1,82 +1,94 @@
 // ==UserScript==
 // @name         1px Video Progress Bar
 // @namespace    UserScript
-// @version      1.4
-// @description  Always draw a one pixel video progress bar on the bottom of every video element on the page.
+// @version      1.5
+// @description  Draw a 1px progress bar on every visible video
 // @author       0000xFFFF
 // @license      MIT
 // @match        *://*/*
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
-    const tracked = new WeakMap();
+    const tracked = new WeakSet();
 
     function addProgressBar(video) {
-        if (tracked.has(video) || video.closest('.re-progress-ignored')) return;
+        if (tracked.has(video)) return;
+
+        tracked.add(video);
 
         const bar = document.createElement('div');
-        bar.className = 're-progress-bar';
+
         Object.assign(bar.style, {
-            position:      'fixed',
-            height:        '1px',
-            background:    'red',
+            position: 'fixed',
+            height: '1px',
+            background: 'red',
             pointerEvents: 'none',
-            zIndex:        '2147483647',
-            transition:    'opacity 0.2s',
-            opacity:       '0'
+            zIndex: '2147483647',
+            opacity: '0'
         });
 
-        let animationFrame;
+        document.body.appendChild(bar);
+
+        let raf;
 
         function sync() {
+            // Video removed from DOM
+            if (!document.contains(video)) {
+                cancelAnimationFrame(raf);
+                bar.remove();
+                return;
+            }
+
             const rect = video.getBoundingClientRect();
 
-            // Hide bar if video is off-screen or has no size
-            if (rect.height === 0 || rect.top > window.innerHeight || rect.bottom < 0) {
+            // Hidden/offscreen/invalid
+            if (
+                rect.width <= 0 ||
+                rect.height <= 0 ||
+                rect.bottom < 0 ||
+                rect.top > window.innerHeight
+            ) {
                 bar.style.opacity = '0';
             } else {
                 bar.style.opacity = '1';
+
+                const duration = video.duration || 0;
+                const progress = duration > 0
+                    ? video.currentTime / duration
+                    : 0;
+
                 bar.style.left = rect.left + 'px';
                 bar.style.top = (rect.bottom - 1) + 'px';
-
-                const progress = video.currentTime / video.duration;
-                bar.style.width = (isNaN(progress) ? 0 : progress * rect.width) + 'px';
+                bar.style.width = (rect.width * progress) + 'px';
             }
 
-            animationFrame = requestAnimationFrame(sync);
+            raf = requestAnimationFrame(sync);
         }
 
-        function cleanup() {
-            cancelAnimationFrame(animationFrame);
-            bar.remove();
+        // Wait until metadata exists
+        if (video.readyState >= 1) {
+            sync();
+        } else {
+            video.addEventListener('loadedmetadata', sync, { once: true });
         }
-
-        // Use IntersectionObserver to handle cleanup when video is removed
-        const observer = new MutationObserver(() => {
-            if (!document.contains(video)) {
-                cleanup();
-                observer.disconnect();
-            }
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-
-        document.body.appendChild(bar);
-        tracked.set(video, bar);
-        sync(); // Start loop
     }
 
-    // Twitter specific: Target videos inside the main timeline
-    const scan = () => {
-        const videos = document.querySelectorAll('video');
-        for (const v of videos) addProgressBar(v);
-    };
+    function scan() {
+        document.querySelectorAll('video').forEach(addProgressBar);
+    }
 
-    // Run frequently to catch Twitter's aggressive DOM recycling
-    setInterval(scan, 2000);
+    // Initial scan
+    scan();
 
-    const obs = new MutationObserver(scan);
-    obs.observe(document.body, { childList: true, subtree: true });
+    // Catch dynamically inserted videos
+    const observer = new MutationObserver(scan);
+
+    observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true
+    });
+
 })();
